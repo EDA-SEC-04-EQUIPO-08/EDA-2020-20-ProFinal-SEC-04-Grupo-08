@@ -40,12 +40,60 @@ recae sobre el controlador.
 #  Inicializacion del catalogo
 # ___________________________________________________
 
+def init():
+    """
+    Llama la funcion de inicializacion  del modelo.
+    """
+    # analyzer es utilizado para interactuar con el modelo
+    analyzer = model.newAnalyzer()
+    return analyzer
 
 # ___________________________________________________
 #  Funciones para la carga de datos y almacenamiento
 #  de datos en los modelos
 # ___________________________________________________
 
+def loadTrips(analyzer, tripsfile):
+    """
+    Carga los datos de los archivos CSV en el modelo
+    """
+    tripsfile = cf.data_dir + tripsfile
+    input_file = csv.DictReader(open(tripsfile, encoding="utf-8"),
+                                delimiter=",")
+    for trip in input_file:
+        model.addTrip(analyzer, trip)
+    return analyzer
+
+def loadFiles(analyzer,totalFiles):
+    """
+    Carga todos los archivos
+    """
+    for filename in totalFiles:
+        if filename.endswith('.csv'):
+            print('Cargando archivo: ' + filename)
+            loadTrips(analyzer, filename)
+    return analyzer
+
 # ___________________________________________________
 #  Funciones para consultas
 # ___________________________________________________
+
+def getBestRoute(analyzer, originArea, destinArea, initHour, endHour):
+    """
+    Busca la mejor ruta entre dos estaciones
+    """
+    originArea += ".0"
+    destinArea +=".0"
+    initPos = model.hourPosition(model.roundedTime(initHour))
+    endPos = model.hourPosition(model.roundedTime(endHour))
+    if initPos > endPos:
+        x = initPos
+        initPos = endPos
+        endPos = x
+    return model.getBestRoute(analyzer, originArea, destinArea, initPos, endPos)
+
+def totalTrips(analyzer):
+    """
+    Informa la cantidad total de viajes cargados
+    """
+    return model.totalTrips(analyzer)
