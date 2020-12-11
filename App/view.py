@@ -76,20 +76,23 @@ def optionTwo():
 
 def optionThree():
     try:
-        print('El número de componentes conectados es: ' +
-              str(controller.connectedComponents(analyzer)))
-        if id1.isdigit() and id2.isdigit():
-            connected = controller.verticesSCC(analyzer, id1, id2)
-            if connected:
-                print("Las estaciones con codigo "+id1+" y "+id2+" pertenecen al mismo cluster")
-            elif connected is None:
-                print("No se puede hacer la busqueda, intente con estaciones diferentes")
-            else:
-                print("Las estaciones con codigo "+id1+" y "+id2+" no pertenecen al mismo cluster")
+        diccio=controller.getTopCompanies(analyzer)
+        print ("\n")
+        if topM<=len(diccio["top_taxis"]) and topN<=len(diccio["top_services"]):
+            print ("El total de taxis es: "+ str(diccio["total_taxis"]))
+            print ("El total de compañías es: "+ str(diccio["total_companies"])+"\n")
+            print ("El top "+str(topM)+" de compañías de acuerdo a su cantidad de taxis es: \n")
+            for i in range(0,topM):
+                print ("#"+str(i+1))
+                print (diccio["top_taxis"][i][1]+" con "+str(diccio["top_taxis"][i][0]*-1)+" taxis afiliados.\n")
+            print ("\nEl top "+str(topN)+" de compañías de acuerdo a su cantidad de servicios prestados es: \n")
+            for j in range(0,topN):
+                print ("#"+str(j+1))
+                print (diccio["top_services"][j][1]+" con "+str(diccio["top_services"][j][0]*-1)+" servicios prestados.\n")
         else:
-            print("Los ID tienen que ser un numero natural, intente con entradas diferentes")
+            print("No hay suficientes datos para un top tan grande. Ingrese un valor menor.")
     except:
-        print("Hubo un error en la busqueda")
+        print("Hubo un error en la búsqueda")
 
 def optionFour():
     try:
@@ -156,8 +159,8 @@ while True:
 
     elif int(inputs[0]) == 3:
         if analizadorCargado() and datos:
-            id1 = input('Ingrese el ID de la primera estacion: ' )
-            id2 = input('Ingrese el ID de la segunda estacion: ' )
+            topM=int(input("Ingrese el tamaño del top de acuerdo a cantidad de taxis: "))
+            topN=int(input("Ingrese el tamaño del top de acuerdo a cantidad de servicios: "))
             executiontime = timeit.timeit(optionThree, number=1)
             print("Tiempo de ejecución: " + str(executiontime))
         else:
