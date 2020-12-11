@@ -110,7 +110,7 @@ def min(minpq):
         error.reraise(exp, 'minpq:min')
 
 
-def insert(minpq, element):
+def insert(minpq, key, value ):
     """
     Guarda el elemento 'element' en la cola de prioridad.
     Lo guarda en la última posición y luego hace swim del elemento
@@ -124,7 +124,7 @@ def insert(minpq, element):
         Exception
     """
     try:
-        minpq['heap'] = h.insert(minpq['heap'], element)
+        minpq['heap'] = h.insert(minpq['heap'], key, value)
         return minpq
     except Exception as exp:
         error.reraise(exp, 'minpq:insert')
