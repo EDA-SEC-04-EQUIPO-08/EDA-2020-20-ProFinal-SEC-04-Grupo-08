@@ -26,11 +26,13 @@
 import config
 from DISClib.ADT.graph import gr
 from DISClib.ADT import map as m
+from DISClib.ADT import minpq as mp
 from DISClib.DataStructures import mapentry as me
 from DISClib.ADT import queue as qu
 from DISClib.DataStructures import edge as e
 from DISClib.ADT import list as lt
 from DISClib.DataStructures import listiterator as it
+from DISClib.DataStructures import heap as hp
 from DISClib.Algorithms.Graphs import scc
 from DISClib.Algorithms.Graphs import dijsktra as djk
 from DISClib.Utils import error as error
@@ -51,7 +53,14 @@ def newAnalyzer():
     try:
         analyzer = {
                     "hours":lt.newList("ARRAY_LIST", compare),
-                    "NumTrips": 0
+                    "companies":{
+                                "list":lt.newList("ARRAY_LIST",compare),
+                                "taxis":lt.newList("ARRAY_LIST",compare),
+                                "total_taxis":mp.newMinPQ(compare),
+                                "total_services":mp.newMinPQ(compare),
+                                "diccio":{"top_taxis":[],"top_services":[]}},
+                    "NumTrips": 0,
+                    "NumTaxis": 0
                     }
         createHoursGraph(analyzer["hours"])
         return analyzer
@@ -89,6 +98,8 @@ def addTrip(analyzer, trip):
     destinationArea = trip['dropoff_community_area']
     originArea = trip["pickup_community_area"]
     strDur = trip['trip_seconds']
+    company = trip['company']
+    taxi = trip['taxi_id']
     if (strDur != "") and (destinationArea != "") and (originArea != ""):
         duration = float(strDur)
         hourPos = hourPosition(originTime)
@@ -96,6 +107,7 @@ def addTrip(analyzer, trip):
         addComunity(graph, originArea)
         addComunity(graph, destinationArea)
         addConnection(graph, originArea, destinationArea, duration)
+        addCompanyTaxis(analyzer,company,taxi)
         analyzer["NumTrips"] += 1
         
 
@@ -119,6 +131,36 @@ def addConnection(graph, origin, destination, duration):
         prom = (duration + weight)/2
         edge['weight'] = prom
     return graph
+   
+def addCompanyTaxis (analyzer, company, taxi):
+    lst=analyzer["companies"]
+    if lt.isPresent(lst["list"],company)>0:
+        iterator=it.newIterator(lst["taxis"])
+        while it.hasNext(iterator):
+            element=it.next(iterator)
+            if element["company"] == company:
+                element["services"]+=1
+                if lt.isPresent(element["taxis_id"],taxi)==0:
+                    lt.addLast(element["taxis_id"],taxi)
+    else:
+        dicc={"company":company, "taxis_id":lt.newList("ARRAY_LIST",compare), "services":1}
+        lt.addLast(dicc["taxis_id"],taxi)
+        lt.addLast(lst["list"],company)
+        lt.addLast(lst["taxis"],dicc)
+
+
+
+def addTaxisServices (analyzer):
+    iterator=it.newIterator(analyzer["companies"]["taxis"])
+    while it.hasNext(iterator):
+        company=it.next(iterator)
+        mp.insert(analyzer["companies"]["total_taxis"],(lt.size(company["taxis_id"])*-1),company["company"])
+        mp.insert(analyzer["companies"]["total_services"],(company["services"])*-1,company["company"])
+        analyzer["NumTaxis"]+=lt.size(company["taxis_id"])
+    for i in range(0,mp.size(analyzer["companies"]["total_taxis"])):
+        analyzer["companies"]["diccio"]["top_taxis"].append(mp.delMin(analyzer["companies"]["total_taxis"]))
+    for j in range (0,mp.size(analyzer["companies"]["total_services"])):
+        analyzer["companies"]["diccio"]["top_services"].append(mp.delMin(analyzer["companies"]["total_services"]))
 
 # ==============================
 # Funciones de consulta
@@ -167,6 +209,12 @@ def totalTrips(analyzer):
     Informa la cantidad total de viajes cargados
     """
     return analyzer["NumTrips"]
+  
+  
+def getTopCompanies (analyzer):
+    heap=analyzer["companies"]["diccio"]
+    diccio={"total_taxis":analyzer["NumTaxis"],"total_companies":lt.size(analyzer["companies"]["list"]),"top_taxis":heap["top_taxis"],"top_services":heap["top_services"]}
+    return diccio
 
 # ==============================
 # Funciones Helper
