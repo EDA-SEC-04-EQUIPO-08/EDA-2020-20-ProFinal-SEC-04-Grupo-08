@@ -97,3 +97,11 @@ def totalTrips(analyzer):
     Informa la cantidad total de viajes cargados
     """
     return model.totalTrips(analyzer)
+  
+def getTopCompanies (analyzer):
+    """
+    Retorna un diccionario con un reporte general
+    (total de taxis, compañias y tops de compañías de acuerdo a taxis y servicios)
+    """
+    model.addTaxisServices(analyzer)
+    return model.getTopCompanies (analyzer)
