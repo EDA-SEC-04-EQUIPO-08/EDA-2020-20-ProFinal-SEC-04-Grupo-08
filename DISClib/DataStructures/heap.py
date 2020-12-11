@@ -117,7 +117,7 @@ def min(heap):
         error.reraise(exp, 'heap:min')
 
 
-def insert(heap, element):
+def insert(heap, key, value):
     """
     Guarda la pareja llave-valor en el heap. Lo guarda en la última
     posición y luego hace swim del elemento
@@ -131,6 +131,7 @@ def insert(heap, element):
         Exception
     """
     try:
+        element=(key,value)
         heap['size'] += 1
         lt.insertElement(heap['elements'], element, heap['size'])
         swim(heap, heap['size'])
