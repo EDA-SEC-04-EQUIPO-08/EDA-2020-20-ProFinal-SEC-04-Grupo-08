@@ -232,7 +232,7 @@ def greater(heap, element1, element2):
     Indica si el elemento 1 es mayor que el elemento 2
     """
     try:
-        cmp = heap['cmpfunction'](element1, element2)
+        cmp = heap['cmpfunction'](element1[0], element2[0])
         if cmp > 0:
             return True
         return False
