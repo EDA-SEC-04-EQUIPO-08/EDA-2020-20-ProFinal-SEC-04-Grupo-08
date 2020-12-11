@@ -72,6 +72,8 @@ def loadFiles(analyzer,totalFiles):
         if filename.endswith('.csv'):
             print('Cargando archivo: ' + filename)
             loadTrips(analyzer, filename)
+    print('Cargando informacion extra...')
+    model.addTaxisServices(analyzer)  
     return analyzer
 
 # ___________________________________________________
@@ -103,5 +105,4 @@ def getTopCompanies (analyzer):
     Retorna un diccionario con un reporte general
     (total de taxis, compañias y tops de compañías de acuerdo a taxis y servicios)
     """
-    model.addTaxisServices(analyzer)
     return model.getTopCompanies (analyzer)
