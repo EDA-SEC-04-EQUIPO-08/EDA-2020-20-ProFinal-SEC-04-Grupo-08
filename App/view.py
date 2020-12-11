@@ -58,7 +58,7 @@ def printMenu():
     print("*******************************************")
     print("Bienvenido")
     print("1- Inicializar Analizador")
-    print("2- Cargar información de accidentes")
+    print("2- Cargar información de viajes")
     print("3- Top compañías")
     print("4- Top taxis")
     print("5- Mejor horario")
