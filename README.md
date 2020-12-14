@@ -30,3 +30,14 @@ Este directorio contiene todo el código de base que se entrega para el funciona
 -Test
 Este directorio contiene las pruebas realizadas a los TADs, Estructuras de Datos y Algoritmos.
 
+# Datos de los integrantes del grupo
+
+* Maria Paula Gonzales: 
+  m.gonzaleze@uniandes.edu.co
+  202012265
+* Jessica Alejandra Robles Moreno:
+  j.roblesm@uniandes.edu.co
+  202013355
+* Martin Ubaque:
+  m.ubaque@uniandes.edu.co
+  201923281
