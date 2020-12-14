@@ -186,11 +186,8 @@ def addDate(analyzer, inicial_date, millas, money, idTaxi):
                 "taxis":lt.newList("ARRAY_LIST",compare)
                 }
         m.put(value["map"],idTaxi,{"idTaxi": idTaxi, "millas": millas, "money": money, "services": 1})
-        #print(value["map"],"1")
         lt.addLast(value["taxis"],idTaxi)
-        #print(value["taxis"],"2")
         m.put(mapa, inicial_date, value)
-        #print(mapa,"3")
     else:
         changeDateInfo(mapa, inicial_date, millas, money, idTaxi)
 
@@ -206,46 +203,29 @@ def changeDateInfo(mapa, inicial_date, millas, money, idTaxi):
         taxiDict["millas"]+=millas
         taxiDict["money"]+=money
         taxiDict["services"]+=1
-    #print(fecha,"4")
-    #print(fechaDict["taxis"],"5")
-    #print(taxi,"6")
 
 def orderPoints(analyzer):
     lista=analyzer["list_dates"]
-    #print(lista,"7")
     mapa= analyzer["date"]
-    #print(mapa,"8")
     arbol= analyzer["arbol_dates"]
     for i in range(1, lt.size(lista)+1):
         date=lt.getElement(lista, i)
-        #print(date,"9")
         taxis=me.getValue(m.get(mapa, date))
-        #print(taxis,"10")
         taxisLst = taxis["taxis"]
-        #print(taxisLst,"11")
         taxisMap = taxis["map"]
-        #print(taxisMap,"12")
         max_pq=hp.newHeap(compare)
         for j in range (1, lt.size(taxisLst)+1):
             taxiId = lt.getElement(taxisLst,j)
-            #print(taxiId,"13")
             taxiDict = me.getValue(m.get(taxisMap,taxiId))
-            #print(taxiDict,"14")
             point=(taxiDict["millas"]/taxiDict["money"])*taxiDict["services"]
-            #print(point,"15")
             hp.insertMax(max_pq,point, taxiId)
-        #print(max_pq,"16")
         lst = max_pq['elements']
-        #print(lst,"17")
         size = lt.size(lst)
-        #print(size,"18")
         while size>1:
             lt.exchange(lst,1,size)
             size -=1
             sinksort(lst,1,size)
-        #print(lst,"19")
         om.put(arbol,date, lst)
-    #print(arbol,"20")
 # ==============================
 # Funciones de consulta
 # ==============================
@@ -301,9 +281,7 @@ def getTopCompanies (analyzer):
 
 def points(analyzer, date):
     arbol=analyzer["arbol_dates"]
-    print(arbol,"21")
     lista=om.get(arbol, date)["value"]
-    print(lista,"22")
     if lista is None:
         return None
     return (lista,lt.size(lista))
@@ -424,3 +402,4 @@ def compareMap(keyname, entry):
         return 1
     else:
         return -1
+
