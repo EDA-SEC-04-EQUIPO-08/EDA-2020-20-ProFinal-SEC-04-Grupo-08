@@ -32,7 +32,6 @@ assert config
 
 """
 Implementación de una cola de prioridad orientada a menor
-
 Este código está basados en la implementación
 propuesta por R.Sedgewick y Kevin Wayne en su libro
 Algorithms, 4th Edition
@@ -42,7 +41,6 @@ Algorithms, 4th Edition
 def newMinPQ(cmpfunction):
     """
     Crea un cola de prioridad orientada a menor
-
     Args:
         cmpfunction: La funcion de comparacion
         size: El numero de elementos
@@ -79,7 +77,6 @@ def size(minpq):
 def isEmpty(minpq):
     """
     Indica si la MinPQ está vacía
-
     Args:
         heap: El arreglo con la informacion
     Returns:
@@ -96,7 +93,6 @@ def isEmpty(minpq):
 def min(minpq):
     """
     Retorna el primer elemento de la MinPQ, es decir el menor elemento
-
     Args:
         minpq: La cola de prioridad
     Returns:
@@ -114,7 +110,6 @@ def insert(minpq, key, value ):
     """
     Guarda el elemento 'element' en la cola de prioridad.
     Lo guarda en la última posición y luego hace swim del elemento
-
     Args:
         minpq: El arreglo con la informacion
         element: El elemento a guardar
@@ -134,10 +129,8 @@ def delMin(minpq):
     """
     Retorna el menor elemento de la MinPQ y lo elimina.
     Se reemplaza con el último elemento y se hace sink.
-
     Args:
         minpq: La cola de prioridad
-
     Returns:
         El menor elemento eliminado
     Raises:

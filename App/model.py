@@ -27,6 +27,7 @@ import config
 from DISClib.ADT.graph import gr
 from DISClib.ADT import map as m
 from DISClib.ADT import minpq as mp
+from DISClib.ADT import orderedmap as om
 from DISClib.DataStructures import mapentry as me
 from DISClib.ADT import queue as qu
 from DISClib.DataStructures import edge as e
@@ -47,6 +48,7 @@ de creacion y consulta sobre las estructuras de datos.
 # -----------------------------------------------------
 #                       API
 # -----------------------------------------------------
+
 def newAnalyzer():
     """ Inicializa el analizador
     """
@@ -60,13 +62,19 @@ def newAnalyzer():
                                 "total_services":mp.newMinPQ(compare),
                                 "diccio":{"top_taxis":[],"top_services":[]}},
                     "NumTrips": 0,
-                    "NumTaxis": 0
+                    "NumTaxis": 0,
+                    "date":m.newMap(1000,
+                                   maptype='CHAINING',
+                                   loadfactor=5,
+                                   comparefunction=compareMap),
+                    "list_dates":lt.newList("ARRAY_LIST", compare),
+                    "arbol_dates":om.newMap(omaptype='RBT',
+                                      comparefunction=compare)
                     }
         createHoursGraph(analyzer["hours"])
         return analyzer
     except Exception as exp:
         error.reraise(exp, 'model:newAnalyzer')
-
 def createHoursGraph(lst):
     """
     Crea un grafo para cada rango de hora en la lista
@@ -95,11 +103,16 @@ def addTrip(analyzer, trip):
     """
     originDate = trip['trip_start_timestamp']
     originTime =  originDate[11:]
+    inicial_date = originDate[:10]
     destinationArea = trip['dropoff_community_area']
     originArea = trip["pickup_community_area"]
     strDur = trip['trip_seconds']
     company = trip['company']
     taxi = trip['taxi_id']
+    millas = trip["trip_miles"]
+    total_money = trip["trip_total"]
+    if (total_money!="") and (millas!="") and (float(millas)!=0) and (float(total_money)!=0):
+        addDate(analyzer, inicial_date, float(millas), float(total_money), taxi)
     if (strDur != "") and (destinationArea != "") and (originArea != ""):
         duration = float(strDur)
         hourPos = hourPosition(originTime)
@@ -109,7 +122,6 @@ def addTrip(analyzer, trip):
         addConnection(graph, originArea, destinationArea, duration)
         addCompanyTaxis(analyzer,company,taxi)
         analyzer["NumTrips"] += 1
-        
 
 def addComunity(graph, comunity):
     """
@@ -131,7 +143,7 @@ def addConnection(graph, origin, destination, duration):
         prom = (duration + weight)/2
         edge['weight'] = prom
     return graph
-   
+
 def addCompanyTaxis (analyzer, company, taxi):
     lst=analyzer["companies"]
     if lt.isPresent(lst["list"],company)>0:
@@ -148,8 +160,6 @@ def addCompanyTaxis (analyzer, company, taxi):
         lt.addLast(lst["list"],company)
         lt.addLast(lst["taxis"],dicc)
 
-
-
 def addTaxisServices (analyzer):
     iterator=it.newIterator(analyzer["companies"]["taxis"])
     while it.hasNext(iterator):
@@ -162,6 +172,60 @@ def addTaxisServices (analyzer):
     for j in range (0,mp.size(analyzer["companies"]["total_services"])):
         analyzer["companies"]["diccio"]["top_services"].append(mp.delMin(analyzer["companies"]["total_services"]))
 
+def addDate(analyzer, inicial_date, millas, money, idTaxi):
+    """
+    Adiciona una fecha al mapa
+    """
+    mapa=analyzer["date"]
+    if m.get(mapa,inicial_date) == None:
+        lt.addLast(analyzer["list_dates"], inicial_date)
+        value={"map":m.newMap(1000,
+                        maptype='CHAINING',
+                        loadfactor=5,
+                        comparefunction=compareMap),
+                "taxis":lt.newList("ARRAY_LIST",compare)
+                }
+        m.put(value["map"],idTaxi,{"idTaxi": idTaxi, "millas": millas, "money": money, "services": 1})
+        lt.addLast(value["taxis"],idTaxi)
+        m.put(mapa, inicial_date, value)
+    else:
+        changeDateInfo(mapa, inicial_date, millas, money, idTaxi)
+
+def changeDateInfo(mapa, inicial_date, millas, money, idTaxi):
+    fecha = m.get(mapa,inicial_date)
+    fechaDict = me.getValue(fecha)
+    taxi = m.get(fechaDict["map"],idTaxi)
+    if taxi == None:
+        m.put(fechaDict["map"],idTaxi,{"idTaxi": idTaxi, "millas": millas, "money": money, "services": 1})
+        lt.addLast(fechaDict["taxis"],idTaxi)
+    else:
+        taxiDict = me.getValue(taxi)
+        taxiDict["millas"]+=millas
+        taxiDict["money"]+=money
+        taxiDict["services"]+=1
+
+def orderPoints(analyzer):
+    lista=analyzer["list_dates"]
+    mapa= analyzer["date"]
+    arbol= analyzer["arbol_dates"]
+    for i in range(1, lt.size(lista)+1):
+        date=lt.getElement(lista, i)
+        taxis=me.getValue(m.get(mapa, date))
+        taxisLst = taxis["taxis"]
+        taxisMap = taxis["map"]
+        max_pq=hp.newHeap(compare)
+        for j in range (1, lt.size(taxisLst)+1):
+            taxiId = lt.getElement(taxisLst,j)
+            taxiDict = me.getValue(m.get(taxisMap,taxiId))
+            point=(taxiDict["millas"]/taxiDict["money"])*taxiDict["services"]
+            hp.insertMax(max_pq,point, taxiId)
+        lst = max_pq['elements']
+        size = lt.size(lst)
+        while size>1:
+            lt.exchange(lst,1,size)
+            size -=1
+            sinksort(lst,1,size)
+        om.put(arbol,date, lst)
 # ==============================
 # Funciones de consulta
 # ==============================
@@ -209,13 +273,52 @@ def totalTrips(analyzer):
     Informa la cantidad total de viajes cargados
     """
     return analyzer["NumTrips"]
-  
-  
+
 def getTopCompanies (analyzer):
     heap=analyzer["companies"]["diccio"]
     diccio={"total_taxis":analyzer["NumTaxis"],"total_companies":lt.size(analyzer["companies"]["list"]),"top_taxis":heap["top_taxis"],"top_services":heap["top_services"]}
     return diccio
 
+def points(analyzer, date):
+    arbol=analyzer["arbol_dates"]
+    lista=om.get(arbol, date)["value"]
+    if lista is None:
+        return None
+    return (lista,lt.size(lista))
+
+def pointsInRange(analyzer, n, in_date, fi_date):
+    arbol=analyzer["arbol_dates"]
+    taxis = lt.newList("ARRAY_LIST",compare)
+    lista=om.values(arbol, in_date, fi_date)
+    if lt.isEmpty(lista):
+        return None
+    iterator=it.newIterator(lista)
+    mapTaxis = m.newMap(100,maptype='CHAINING',loadfactor=5,comparefunction=compareMap)
+    while it.hasNext(iterator):
+        date=it.next(iterator)
+        for i in range(1,lt.size(date)+1):
+            element = lt.getElement(date,i)
+            num,taxiId = element
+            entry = m.get(mapTaxis,taxiId)
+            if entry == None:
+                lt.addLast(taxis, taxiId)
+                m.put(mapTaxis,taxiId,num)
+            else:
+                num2 = entry["value"]
+                numNew = num2 + num
+                entry["value"] = numNew
+    max_pq=hp.newHeap(compare)
+    for j in range (1, lt.size(taxis)+1):
+        taxiId = lt.getElement(taxis,j)
+        points = me.getValue(m.get(mapTaxis,taxiId))
+        hp.insertMax(max_pq,points, taxiId)
+    lst = max_pq['elements']
+    size = lt.size(lst)
+    while size>1:
+        lt.exchange(lst,1,size)
+        size -=1
+        sinksort(lst,1,size)
+    return (lst,lt.size(lst))
 # ==============================
 # Funciones Helper
 # ==============================
@@ -240,7 +343,27 @@ def hourPosition(strTime):
     minutes = minPosDict[lst[1]]
     pos = (hour*4)+minutes
     return pos
-    
+
+def sinksort (lst, pos, size):
+    if (2*pos>size):
+        return lst
+    dad = lt.getElement(lst,pos)
+    left = lt.getElement(lst,2*pos)
+    right = lt.getElement(lst,(2*pos)+1)
+    if ((2*pos)+1 > size):
+        num,id = left
+        right = ((num-1),id)
+    if ((dad > left) and (dad > right)):
+        return lst
+    else:
+        if left >= right:
+            lt.exchange(lst,2*pos,pos)
+            sinksort(lst,2*pos,size)
+        else:
+            lt.exchange(lst,(2*pos)+1,pos)
+            sinksort(lst,(2*pos)+1,size)
+    return lst
+
 # ==============================
 # Funciones de Comparacion
 # ==============================
@@ -279,3 +402,4 @@ def compareMap(keyname, entry):
         return 1
     else:
         return -1
+
